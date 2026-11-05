@@ -57,16 +57,30 @@ const fallbackProducts = [
 const categories = ["All pairs", "Running", "Lifestyle", "Originals"];
 const shoeSizes = ["6", "7", "8", "9", "10", "11", "12"];
 
+function readSavedArray(key) {
+  try {
+    const saved = window.localStorage.getItem(key);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn(`Could not restore ${key} from browser storage`, error);
+    return [];
+  }
+}
+
 function App() {
   const [products, setProducts] = useState(fallbackProducts);
   const [catalogSource, setCatalogSource] = useState("loading");
   const [activeCategory, setActiveCategory] = useState("All pairs");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("featured");
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => readSavedArray("sole-society-cart"));
   const [selectedSizes, setSelectedSizes] = useState({});
   const [cartOpen, setCartOpen] = useState(false);
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState(() =>
+    readSavedArray("sole-society-favorites"),
+  );
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -83,6 +97,25 @@ function App() {
         setCatalogSource("sample");
       });
   }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("sole-society-cart", JSON.stringify(cart));
+    } catch (error) {
+      console.warn("Could not save your bag to browser storage", error);
+    }
+  }, [cart]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        "sole-society-favorites",
+        JSON.stringify(favorites),
+      );
+    } catch (error) {
+      console.warn("Could not save favorites to browser storage", error);
+    }
+  }, [favorites]);
 
   const shownProducts = useMemo(
     () => {
