@@ -75,6 +75,7 @@ function App() {
   const [activeCategory, setActiveCategory] = useState("All pairs");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("featured");
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [cart, setCart] = useState(() => readSavedArray("sole-society-cart"));
   const [selectedSizes, setSelectedSizes] = useState({});
   const [cartOpen, setCartOpen] = useState(false);
@@ -129,7 +130,9 @@ function App() {
           `${product.name} ${product.color} ${product.category}`
             .toLowerCase()
             .includes(query);
-        return matchesCategory && matchesSearch;
+        const matchesFavorites =
+          !favoritesOnly || favorites.includes(product.id);
+        return matchesCategory && matchesSearch && matchesFavorites;
       });
       return filtered.sort((first, second) => {
         if (sortOrder === "price-low") return first.price - second.price;
@@ -138,7 +141,7 @@ function App() {
         return 0;
       });
     },
-    [activeCategory, products, searchQuery, sortOrder],
+    [activeCategory, favorites, favoritesOnly, products, searchQuery, sortOrder],
   );
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
   const subtotal = cart.reduce(
@@ -319,6 +322,19 @@ function App() {
                   {category}
                 </button>
               ))}
+              <button
+                className={favoritesOnly ? "filter-chip active" : "filter-chip"}
+                onClick={() => setFavoritesOnly((enabled) => !enabled)}
+                aria-pressed={favoritesOnly}
+              >
+                <Heart
+                  className="favorites-filter-icon"
+                  size={13}
+                  fill={favoritesOnly ? "currentColor" : "none"}
+                  aria-hidden="true"
+                />
+                Favorites ({favorites.length})
+              </button>
             </div>
             <label className="catalog-search">
               <Search size={15} aria-hidden="true" />
@@ -403,7 +419,11 @@ function App() {
             ))}
           </div>
           {shownProducts.length === 0 && (
-            <p className="empty-results">No sneakers match that search. Try another name or color.</p>
+            <p className="empty-results">
+              {favoritesOnly && favorites.length === 0
+                ? "No favorites yet. Tap the heart on a sneaker to save it here."
+                : "No sneakers match your filters. Try another search or category."}
+            </p>
           )}
         </section>
 

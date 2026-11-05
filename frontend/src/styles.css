@@ -80,6 +80,7 @@ h1 em, h2 em { font-family: Georgia, serif; font-weight: 400; }
 .category-filters { display: flex; flex-wrap: wrap; gap: 8px; }
 .filter-chip { min-height: 31px; padding: 0 14px; border: 1px solid #dbdad3; border-radius: 20px; background: transparent; color: #66645d; cursor: pointer; font-size: 10px; transition: all .2s; }
 .filter-chip.active, .filter-chip:hover { border-color: var(--ink); background: var(--ink); color: white; }
+.favorites-filter-icon { margin-right: 4px; vertical-align: -2px; }
 .catalog-search { display: flex; min-width: 190px; height: 34px; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid #bcbab1; color: #77766f; }
 .catalog-search input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 10px; }
 .catalog-search input::placeholder { color: #89877f; }
