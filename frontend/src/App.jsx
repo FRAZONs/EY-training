@@ -8,6 +8,7 @@ import {
   Menu,
   Minus,
   Plus,
+  Search,
   ShoppingBag,
   X,
 } from "lucide-react";
@@ -54,12 +55,16 @@ const fallbackProducts = [
 ];
 
 const categories = ["All pairs", "Running", "Lifestyle", "Originals"];
+const shoeSizes = ["6", "7", "8", "9", "10", "11", "12"];
 
 function App() {
   const [products, setProducts] = useState(fallbackProducts);
   const [catalogSource, setCatalogSource] = useState("loading");
   const [activeCategory, setActiveCategory] = useState("All pairs");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("featured");
   const [cart, setCart] = useState([]);
+  const [selectedSizes, setSelectedSizes] = useState({});
   const [cartOpen, setCartOpen] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [notice, setNotice] = useState("");
@@ -80,11 +85,26 @@ function App() {
   }, []);
 
   const shownProducts = useMemo(
-    () =>
-      activeCategory === "All pairs"
-        ? products
-        : products.filter((product) => product.category === activeCategory),
-    [activeCategory, products],
+    () => {
+      const query = searchQuery.trim().toLowerCase();
+      const filtered = products.filter((product) => {
+        const matchesCategory =
+          activeCategory === "All pairs" || product.category === activeCategory;
+        const matchesSearch =
+          !query ||
+          `${product.name} ${product.color} ${product.category}`
+            .toLowerCase()
+            .includes(query);
+        return matchesCategory && matchesSearch;
+      });
+      return filtered.sort((first, second) => {
+        if (sortOrder === "price-low") return first.price - second.price;
+        if (sortOrder === "price-high") return second.price - first.price;
+        if (sortOrder === "name") return first.name.localeCompare(second.name);
+        return 0;
+      });
+    },
+    [activeCategory, products, searchQuery, sortOrder],
   );
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
   const subtotal = cart.reduce(
@@ -92,26 +112,34 @@ function App() {
     0,
   );
 
-  function addToCart(product) {
+  function addToCart(product, size) {
+    if (!size) {
+      setNotice("Choose a shoe size first");
+      window.setTimeout(() => setNotice(""), 2200);
+      return;
+    }
+
     setCart((items) => {
-      const existing = items.find((item) => item.id === product.id);
+      const existing = items.find(
+        (item) => item.id === product.id && item.size === size,
+      );
       return existing
         ? items.map((item) =>
-            item.id === product.id
+            item.id === product.id && item.size === size
               ? { ...item, quantity: item.quantity + 1 }
               : item,
           )
-        : [...items, { ...product, quantity: 1 }];
+        : [...items, { ...product, size, quantity: 1 }];
     });
-    setNotice(`${product.name} added to your bag`);
+    setNotice(`${product.name} (US ${size}) added to your bag`);
     window.setTimeout(() => setNotice(""), 2200);
   }
 
-  function changeQuantity(productId, amount) {
+  function changeQuantity(productId, size, amount) {
     setCart((items) =>
       items
         .map((item) =>
-          item.id === productId
+          item.id === productId && item.size === size
             ? { ...item, quantity: item.quantity + amount }
             : item,
         )
@@ -217,6 +245,29 @@ function App() {
                 </button>
               ))}
             </div>
+            <label className="catalog-search">
+              <Search size={15} aria-hidden="true" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search sneakers"
+                aria-label="Search sneakers by name, color, or category"
+              />
+            </label>
+            <label className="sort-control">
+              <span>SORT</span>
+              <select
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value)}
+                aria-label="Sort sneakers"
+              >
+                <option value="featured">Featured</option>
+                <option value="price-low">Price: low to high</option>
+                <option value="price-high">Price: high to low</option>
+                <option value="name">Name: A to Z</option>
+              </select>
+            </label>
             <span className="results-count">
               {shownProducts.length} PAIRS{catalogSource === "sample" && " · SAMPLE CATALOG"}
             </span>
@@ -241,7 +292,10 @@ function App() {
                   >
                     <Heart size={18} fill={favorites.includes(product.id) ? "currentColor" : "none"} />
                   </button>
-                  <button className="quick-add" onClick={() => addToCart(product)}>
+                  <button
+                    className="quick-add"
+                    onClick={() => addToCart(product, selectedSizes[product.id])}
+                  >
                     QUICK ADD <Plus size={15} />
                   </button>
                 </div>
@@ -250,11 +304,32 @@ function App() {
                   <span className="product-price">${product.price}</span>
                 </div>
                 <p className="product-color">{product.color}</p>
+                <label className="size-picker">
+                  <span>US SIZE</span>
+                  <select
+                    value={selectedSizes[product.id] ?? ""}
+                    onChange={(event) =>
+                      setSelectedSizes((sizes) => ({
+                        ...sizes,
+                        [product.id]: event.target.value,
+                      }))
+                    }
+                    aria-label={`Choose a US shoe size for ${product.name}`}
+                  >
+                    <option value="" disabled>Choose size</option>
+                    {shoeSizes.map((size) => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                </label>
                 <div className="swatches" aria-label="Available colors"><i /><i /><i /></div>
                 <span className="product-index">0{index + 1}</span>
               </article>
             ))}
           </div>
+          {shownProducts.length === 0 && (
+            <p className="empty-results">No sneakers match that search. Try another name or color.</p>
+          )}
         </section>
 
         <section className="story-section" id="story">
@@ -301,14 +376,14 @@ function App() {
               <>
                 <div className="cart-items">
                   {cart.map((item) => (
-                    <div className="cart-item" key={item.id}>
+                    <div className="cart-item" key={`${item.id}-${item.size}`}>
                       <img src={item.image} alt="" />
                       <div className="cart-item-info">
-                        <div className="cart-item-heading"><div><h3>{item.name}</h3><span>{item.color}</span></div><strong>${item.price}</strong></div>
+                        <div className="cart-item-heading"><div><h3>{item.name}</h3><span>{item.color} · US {item.size}</span></div><strong>${item.price}</strong></div>
                         <div className="quantity-control">
-                          <button onClick={() => changeQuantity(item.id, -1)} aria-label={`Remove one ${item.name}`}><Minus size={13} /></button>
+                          <button onClick={() => changeQuantity(item.id, item.size, -1)} aria-label={`Remove one ${item.name}, size ${item.size}`}><Minus size={13} /></button>
                           <span>{item.quantity}</span>
-                          <button onClick={() => changeQuantity(item.id, 1)} aria-label={`Add one ${item.name}`}><Plus size={13} /></button>
+                          <button onClick={() => changeQuantity(item.id, item.size, 1)} aria-label={`Add one ${item.name}, size ${item.size}`}><Plus size={13} /></button>
                         </div>
                       </div>
                     </div>
