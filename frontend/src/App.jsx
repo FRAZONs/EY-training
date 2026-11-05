@@ -8,6 +8,7 @@ import {
   Menu,
   Minus,
   Plus,
+  Search,
   ShoppingBag,
   X,
 } from "lucide-react";
@@ -59,6 +60,7 @@ function App() {
   const [products, setProducts] = useState(fallbackProducts);
   const [catalogSource, setCatalogSource] = useState("loading");
   const [activeCategory, setActiveCategory] = useState("All pairs");
+  const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [favorites, setFavorites] = useState([]);
@@ -80,11 +82,20 @@ function App() {
   }, []);
 
   const shownProducts = useMemo(
-    () =>
-      activeCategory === "All pairs"
-        ? products
-        : products.filter((product) => product.category === activeCategory),
-    [activeCategory, products],
+    () => {
+      const query = searchQuery.trim().toLowerCase();
+      return products.filter((product) => {
+        const matchesCategory =
+          activeCategory === "All pairs" || product.category === activeCategory;
+        const matchesSearch =
+          !query ||
+          `${product.name} ${product.color} ${product.category}`
+            .toLowerCase()
+            .includes(query);
+        return matchesCategory && matchesSearch;
+      });
+    },
+    [activeCategory, products, searchQuery],
   );
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
   const subtotal = cart.reduce(
@@ -217,6 +228,16 @@ function App() {
                 </button>
               ))}
             </div>
+            <label className="catalog-search">
+              <Search size={15} aria-hidden="true" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search sneakers"
+                aria-label="Search sneakers by name, color, or category"
+              />
+            </label>
             <span className="results-count">
               {shownProducts.length} PAIRS{catalogSource === "sample" && " · SAMPLE CATALOG"}
             </span>
@@ -255,6 +276,9 @@ function App() {
               </article>
             ))}
           </div>
+          {shownProducts.length === 0 && (
+            <p className="empty-results">No sneakers match that search. Try another name or color.</p>
+          )}
         </section>
 
         <section className="story-section" id="story">
