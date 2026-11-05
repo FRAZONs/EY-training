@@ -56,6 +56,7 @@ const fallbackProducts = [
 
 const categories = ["All pairs", "Running", "Lifestyle", "Originals"];
 const shoeSizes = ["6", "7", "8", "9", "10", "11", "12"];
+const freeShippingThreshold = 100;
 
 function readSavedArray(key) {
   try {
@@ -148,6 +149,11 @@ function App() {
     (total, item) => total + item.price * item.quantity,
     0,
   );
+  const shippingProgress = Math.min(
+    (subtotal / freeShippingThreshold) * 100,
+    100,
+  );
+  const amountUntilFreeShipping = Math.max(freeShippingThreshold - subtotal, 0);
 
   function addToCart(product, size) {
     if (!size) {
@@ -237,7 +243,7 @@ function App() {
     <>
       <div className="announcement">
         <span>GOOD SHOES. GOOD MOOD.</span>
-        <span className="announcement-detail">Free shipping on orders over $100</span>
+        <span className="announcement-detail">Free shipping on orders $100+</span>
         <ArrowUpRight size={14} aria-hidden="true" />
       </div>
 
@@ -296,7 +302,7 @@ function App() {
         <section className="benefit-strip" aria-label="Shopping benefits">
           <div><span className="benefit-icon">✳</span> COMFORT THAT GOES THE DISTANCE</div>
           <span className="benefit-divider" />
-          <div><span className="benefit-icon">↗</span> FREE SHIPPING OVER $100</div>
+          <div><span className="benefit-icon">↗</span> FREE SHIPPING ON $100+</div>
           <span className="benefit-divider" />
           <div><span className="benefit-icon">♡</span> 30-DAY EASY RETURNS</div>
         </section>
@@ -486,6 +492,23 @@ function App() {
                 </div>
                 <div className="cart-summary">
                   <p><span>Subtotal</span><strong>${subtotal.toFixed(2)}</strong></p>
+                  <div className="shipping-progress">
+                    <p>
+                      {amountUntilFreeShipping > 0
+                        ? `You're $${amountUntilFreeShipping.toFixed(2)} away from free shipping`
+                        : "You've unlocked free shipping!"}
+                    </p>
+                    <div
+                      className="shipping-progress-track"
+                      role="progressbar"
+                      aria-label="Progress toward free shipping"
+                      aria-valuemin={0}
+                      aria-valuemax={freeShippingThreshold}
+                      aria-valuenow={Math.min(subtotal, freeShippingThreshold)}
+                    >
+                      <span style={{ width: `${shippingProgress}%` }} />
+                    </div>
+                  </div>
                   <span>Shipping and taxes calculated at checkout.</span>
                   <button
                     className="primary-button checkout-button"
