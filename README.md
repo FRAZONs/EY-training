@@ -5,7 +5,10 @@ A responsive sneaker storefront built with React, Vite, and FastAPI.
 ## Features
 
 - Product catalog served by the FastAPI backend
-- Category filtering, favorites, and an interactive shopping bag
+- Category filtering, live search, price sorting, favorites, and an interactive shopping bag
+- Shoe-size selection with the chosen size shown in the shopping bag
+- Bag and favorites saved between visits in browser storage
+- Order submission to the FastAPI API with server-side product and size validation
 - Responsive storefront layout with externally hosted Unsplash sneaker photography
 - Basic order endpoint that validates product IDs and quantities
 
@@ -42,8 +45,7 @@ The storefront includes a sample catalog fallback if the API is not running.
 - `GET /api/health` — health check
 - `GET /api/products` — sneaker catalog
 - `POST /api/orders` — validate and total an order; accepts
-  `{"items":[{"product_id":1,"quantity":2}]}`
+  `{"items":[{"product_id":1,"quantity":2,"size":"8"}]}`
 
-Orders are returned as validated quotes and are not persisted. Checkout is a
-front-end placeholder; payment processing and inventory management are not
-implemented.
+Orders are accepted and totaled for demonstration but are not persisted.
+Payment processing and inventory management are not implemented.
