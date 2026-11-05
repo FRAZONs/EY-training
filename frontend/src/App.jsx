@@ -61,6 +61,7 @@ function App() {
   const [catalogSource, setCatalogSource] = useState("loading");
   const [activeCategory, setActiveCategory] = useState("All pairs");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("featured");
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [favorites, setFavorites] = useState([]);
@@ -84,7 +85,7 @@ function App() {
   const shownProducts = useMemo(
     () => {
       const query = searchQuery.trim().toLowerCase();
-      return products.filter((product) => {
+      const filtered = products.filter((product) => {
         const matchesCategory =
           activeCategory === "All pairs" || product.category === activeCategory;
         const matchesSearch =
@@ -94,8 +95,14 @@ function App() {
             .includes(query);
         return matchesCategory && matchesSearch;
       });
+      return filtered.sort((first, second) => {
+        if (sortOrder === "price-low") return first.price - second.price;
+        if (sortOrder === "price-high") return second.price - first.price;
+        if (sortOrder === "name") return first.name.localeCompare(second.name);
+        return 0;
+      });
     },
-    [activeCategory, products, searchQuery],
+    [activeCategory, products, searchQuery, sortOrder],
   );
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
   const subtotal = cart.reduce(
@@ -237,6 +244,19 @@ function App() {
                 placeholder="Search sneakers"
                 aria-label="Search sneakers by name, color, or category"
               />
+            </label>
+            <label className="sort-control">
+              <span>SORT</span>
+              <select
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value)}
+                aria-label="Sort sneakers"
+              >
+                <option value="featured">Featured</option>
+                <option value="price-low">Price: low to high</option>
+                <option value="price-high">Price: high to low</option>
+                <option value="name">Name: A to Z</option>
+              </select>
             </label>
             <span className="results-count">
               {shownProducts.length} PAIRS{catalogSource === "sample" && " · SAMPLE CATALOG"}
