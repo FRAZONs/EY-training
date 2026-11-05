@@ -149,6 +149,8 @@ h1 em, h2 em { font-family: Georgia, serif; font-weight: 400; }
 .cart-summary > p { display: flex; justify-content: space-between; margin: 0 0 7px; font-size: 13px; }
 .cart-summary > span { color: var(--muted); font-size: 10px; }
 .checkout-button { width: 100%; justify-content: space-between; margin-top: 22px; }
+.checkout-button:disabled { cursor: wait; opacity: .7; }
+.checkout-note { margin: 10px 0 0; color: var(--muted); font-size: 9px; text-align: center; }
 
 @media (max-width: 900px) {
   .hero { min-height: 510px; padding-left: 7%; }

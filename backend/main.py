@@ -55,6 +55,7 @@ PRODUCTS = [
 class OrderItem(BaseModel):
     product_id: int
     quantity: int = Field(gt=0, le=20)
+    size: str = Field(pattern=r"^(6|7|8|9|10|11|12)$")
 
 
 class OrderRequest(BaseModel):
@@ -89,6 +90,7 @@ def create_order(order: OrderRequest):
             {
                 "product_id": product["id"],
                 "name": product["name"],
+                "size": item.size,
                 "quantity": item.quantity,
                 "unit_price": product["price"],
                 "line_total": line_total,

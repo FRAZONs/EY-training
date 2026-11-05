@@ -82,6 +82,7 @@ function App() {
     readSavedArray("sole-society-favorites"),
   );
   const [notice, setNotice] = useState("");
+  const [checkoutPending, setCheckoutPending] = useState(false);
 
   useEffect(() => {
     fetch("http://localhost:8000/api/products")
@@ -186,6 +187,47 @@ function App() {
         ? items.filter((id) => id !== productId)
         : [...items, productId],
     );
+  }
+
+  async function submitOrder() {
+    if (checkoutPending || cart.length === 0) return;
+
+    setCheckoutPending(true);
+    try {
+      const response = await fetch("http://localhost:8000/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cart.map((item) => ({
+            product_id: item.id,
+            quantity: item.quantity,
+            size: item.size,
+          })),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          typeof result.detail === "string"
+            ? result.detail
+            : "Your order could not be submitted. Please try again.",
+        );
+      }
+
+      setCart([]);
+      setCartOpen(false);
+      setNotice(`Order received · Total $${Number(result.total).toFixed(2)}`);
+      window.setTimeout(() => setNotice(""), 3500);
+    } catch (error) {
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "Could not reach checkout. Please try again.",
+      );
+      window.setTimeout(() => setNotice(""), 3500);
+    } finally {
+      setCheckoutPending(false);
+    }
   }
 
   return (
@@ -427,14 +469,14 @@ function App() {
                   <span>Shipping and taxes calculated at checkout.</span>
                   <button
                     className="primary-button checkout-button"
-                    onClick={() => {
-                      setNotice("Checkout is coming soon — thanks for shopping!");
-                      setCartOpen(false);
-                      window.setTimeout(() => setNotice(""), 3000);
-                    }}
+                    onClick={submitOrder}
+                    disabled={checkoutPending}
+                    aria-busy={checkoutPending}
                   >
-                    CHECK OUT <ArrowRight size={16} />
+                    {checkoutPending ? "SENDING ORDER..." : "PLACE ORDER"}
+                    {!checkoutPending && <ArrowRight size={16} />}
                   </button>
+                  <p className="checkout-note">Demo checkout — no payment is collected.</p>
                 </div>
               </>
             )}
