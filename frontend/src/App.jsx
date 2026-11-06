@@ -87,7 +87,7 @@ function App() {
   const [checkoutPending, setCheckoutPending] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/products")
+    fetch("/api/products")
       .then((response) => {
         if (!response.ok) throw new Error("Could not load products");
         return response.json();

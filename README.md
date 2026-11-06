@@ -22,11 +22,11 @@ cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-uvicorn main:app --reload
+python -m uvicorn main:app --reload
 ```
 
-The API is available at `http://localhost:8000`; interactive API docs are at
-`http://localhost:8000/docs`.
+The API is available at `http://127.0.0.1:8000`; interactive API docs are at
+`http://127.0.0.1:8000/docs`.
 
 ### Frontend
 
@@ -39,7 +39,30 @@ npm run dev
 ```
 
 Open the Vite URL shown in the terminal (usually `http://localhost:5173`).
-The storefront includes a sample catalog fallback if the API is not running.
+The Vite development server proxies `/api` requests to the backend.
+
+## Deploy to an Azure Linux VM
+
+Build the frontend and run the backend from the repository root on the VM:
+
+```bash
+cd frontend
+npm ci
+npm run build
+
+cd ../backend
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+sudo .venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 80
+```
+
+FastAPI serves the built frontend and API from the same origin. In the Azure
+portal, add an inbound network security group rule for TCP port `80` (and allow
+it in the VM firewall if enabled), then browse to `http://<VM-public-IP>`.
+Binding to port 80 requires elevated privileges on Linux. Keep the Uvicorn
+process running; for a persistent deployment, run it under a process manager
+such as `systemd`.
 
 ## API
 
